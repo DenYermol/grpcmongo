@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @EnableMongoRepositories(basePackages = ["com.example.grpcmongo.repository"])
 @Configuration
-class MongoConfig: AbstractMongoClientConfiguration() {
+class MongoConfig : AbstractMongoClientConfiguration() {
     override fun getDatabaseName(): String {
         return "test"
     }
@@ -18,8 +18,8 @@ class MongoConfig: AbstractMongoClientConfiguration() {
     override fun mongoClient(): MongoClient {
         val connectionString = ConnectionString("mongodb://localhost:27017/test")
         val mongoClientsSettings = MongoClientSettings.builder()
-                .applyConnectionString(connectionString)
-                .build()
+            .applyConnectionString(connectionString)
+            .build()
         return MongoClients.create(mongoClientsSettings)
     }
 

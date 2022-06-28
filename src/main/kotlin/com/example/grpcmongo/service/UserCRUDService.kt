@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.example.grpcmongo.model.User as UserModel
 
 @GrpcService
-class UserCRUDService: UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
+class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
 
     @Autowired
     lateinit var repository: UserRepository
@@ -24,37 +24,41 @@ class UserCRUDService: UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
 
     override fun readUser(request: Username?, responseObserver: StreamObserver<User>?) {
         val userModel = repository.findByUsername(request!!.username)
-        if(userModel == null){
+        if (userModel == null) {
             responseObserver!!.onError(
-                    Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
-                    .asRuntimeException())
+                Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
+                    .asRuntimeException()
+            )
             return
         }
         val user = User.newBuilder()
-                .setUsername(userModel.username)
-                .setFirstName(userModel.firstName)
-                .setLastName(userModel.lastName)
-                .setAge(userModel.age)
-                .build()
+            .setUsername(userModel.username)
+            .setFirstName(userModel.firstName)
+            .setLastName(userModel.lastName)
+            .setAge(userModel.age)
+            .build()
         responseObserver!!.onNext(user)
         responseObserver.onCompleted()
     }
 
     override fun updateUser(request: User?, responseObserver: StreamObserver<ResponseMessage>?) {
         val user = repository.findByUsername(request!!.username)
-        if(user == null){
+        if (user == null) {
             responseObserver!!.onError(
-                    Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
-                            .asRuntimeException())
+                Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
+                    .asRuntimeException()
+            )
             return
         }
-        repository.save(UserModel(
+        repository.save(
+            UserModel(
                 id = user.id,
                 username = request.username,
                 firstName = request.firstName,
                 lastName = request.lastName,
                 age = request.age
-        ))
+            )
+        )
         val responseMessage = ResponseMessage.newBuilder().setMessage("update user was called").build()
         responseObserver!!.onNext(responseMessage)
         responseObserver.onCompleted()
