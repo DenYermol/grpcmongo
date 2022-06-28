@@ -15,7 +15,7 @@ class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
     lateinit var repository: UserRepository
 
     override fun createUser(request: User?, responseObserver: StreamObserver<ResponseMessage>?) {
-        repository.insert(UserModel.fromProtoMessage(request!!))
+        repository.save(UserModel.fromProtoMessage(request!!)).subscribe()
 
         val responseMessage = ResponseMessage.newBuilder().setMessage("user ${request.username} was created").build()
         responseObserver!!.onNext(responseMessage)
@@ -23,7 +23,7 @@ class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
     }
 
     override fun readUser(request: Username?, responseObserver: StreamObserver<User>?) {
-        val userModel = repository.findByUsername(request!!.username)
+        val userModel = repository.findByUsername(request!!.username).block()
         if (userModel == null) {
             responseObserver!!.onError(
                 Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
@@ -42,7 +42,7 @@ class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
     }
 
     override fun updateUser(request: User?, responseObserver: StreamObserver<ResponseMessage>?) {
-        val user = repository.findByUsername(request!!.username)
+        val user = repository.findByUsername(request!!.username).block()
         if (user == null) {
             responseObserver!!.onError(
                 Status.NOT_FOUND.withDescription("user '${request.username}' is not found")
@@ -58,14 +58,14 @@ class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
                 lastName = request.lastName,
                 age = request.age
             )
-        )
+        ).subscribe()
         val responseMessage = ResponseMessage.newBuilder().setMessage("update user was called").build()
         responseObserver!!.onNext(responseMessage)
         responseObserver.onCompleted()
     }
 
     override fun deleteUser(request: Username?, responseObserver: StreamObserver<ResponseMessage>?) {
-        repository.deleteByUsername(request!!.username)
+        repository.deleteByUsername(request!!.username).subscribe()
         val responseMessage = ResponseMessage.newBuilder().setMessage("user '${request.username}' was deleted").build()
         responseObserver!!.onNext(responseMessage)
         responseObserver.onCompleted()
