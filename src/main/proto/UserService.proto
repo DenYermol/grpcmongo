@@ -1,0 +1,25 @@
+syntax = "proto3";
+option java_package = "com.example.grpc";
+option java_multiple_files = true;
+
+message User {
+  string username = 1;
+  string first_name = 2;
+  string last_name = 3;
+  int32  age = 4;
+}
+
+message ResponseMessage {
+  string message = 1;
+}
+
+message Username {
+  string username = 1;
+}
+
+service UserCRUDService {
+  rpc CreateUser(User) returns (ResponseMessage);
+  rpc ReadUser(Username) returns (User);
+  rpc UpdateUser(User) returns (ResponseMessage);
+  rpc DeleteUser(Username) returns (ResponseMessage);
+}
