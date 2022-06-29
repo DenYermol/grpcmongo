@@ -15,8 +15,9 @@ data class User(
     val age: Int
 ) {
     companion object {
-        fun fromProtoMessage(userMessage: UserMessage): User {
+        fun fromProtoMessage(userMessage: UserMessage, id: ObjectId = ObjectId.get()): User {
             return User(
+                id = id,
                 username = userMessage.username,
                 firstName = userMessage.firstName,
                 lastName = userMessage.lastName,

@@ -51,13 +51,7 @@ class UserCRUDService : UserCRUDServiceGrpc.UserCRUDServiceImplBase() {
             return
         }
         repository.save(
-            UserModel(
-                id = user.id,
-                username = request.username,
-                firstName = request.firstName,
-                lastName = request.lastName,
-                age = request.age
-            )
+            UserModel.fromProtoMessage(request, user.id)
         ).subscribe()
         val responseMessage = ResponseMessage.newBuilder().setMessage("update user was called").build()
         responseObserver!!.onNext(responseMessage)

@@ -54,12 +54,16 @@ protobuf {
         id("grpckt") {
             artifact = "io.grpc:protoc-gen-grpc-kotlin:1.3.0:jdk8@jar"
         }
+        // id("reactor") {
+        //     artifact = "com.salesforce.servicelibs:reactor-grpc:1.2.3"
+        // }
     }
     generateProtoTasks {
         all().forEach {
             it.plugins {
                 id("grpc")
                 id("grpckt")
+                //id("reactor")
             }
             it.builtins {
                 id("kotlin")
