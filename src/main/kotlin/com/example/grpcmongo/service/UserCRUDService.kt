@@ -5,6 +5,7 @@ import com.example.grpcmongo.repository.UserRepository
 import io.grpc.Status
 import net.devh.boot.grpc.server.service.GrpcService
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.Duration
 import com.example.grpcmongo.model.User as UserModel
 
 @GrpcService
@@ -14,7 +15,8 @@ class UserCRUDService : UserCRUDServiceGrpcKt.UserCRUDServiceCoroutineImplBase()
     lateinit var repository: UserRepository
 
     override suspend fun createUser(request: User): ResponseMessage {
-        repository.save(UserModel.fromProtoMessage(request)).subscribe()
+        repository.insert(UserModel.fromProtoMessage(request))
+            .block(Duration.ofSeconds(5))
 
         return ResponseMessage.newBuilder()
             .setMessage("user ${request.username} was created")
@@ -22,7 +24,8 @@ class UserCRUDService : UserCRUDServiceGrpcKt.UserCRUDServiceCoroutineImplBase()
     }
 
     override suspend fun readUser(request: Username): User {
-        val userModel = repository.findByUsername(request.username).block()
+        val userModel = repository.findByUsername(request.username)
+            .block(Duration.ofSeconds(5))
             ?: throw Status.NOT_FOUND
                 .withDescription("user '${request.username}' is not found")
                 .asRuntimeException()
@@ -36,7 +39,8 @@ class UserCRUDService : UserCRUDServiceGrpcKt.UserCRUDServiceCoroutineImplBase()
     }
 
     override suspend fun updateUser(request: User): ResponseMessage {
-        val user = repository.findByUsername(request.username).block()
+        val user = repository.findByUsername(request.username)
+            .block(Duration.ofSeconds(5))
             ?: throw Status.NOT_FOUND
                 .withDescription("user '${request.username}' is not found")
                 .asRuntimeException()
@@ -47,7 +51,8 @@ class UserCRUDService : UserCRUDServiceGrpcKt.UserCRUDServiceCoroutineImplBase()
     }
 
     override suspend fun deleteUser(request: Username): ResponseMessage {
-        repository.deleteByUsername(request.username).subscribe()
+        repository.deleteByUsername(request.username)
+            .block(Duration.ofSeconds(5))
         return ResponseMessage.newBuilder()
             .setMessage("user '${request.username}' was deleted")
             .build()
