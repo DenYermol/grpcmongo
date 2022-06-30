@@ -5,56 +5,66 @@ import com.example.grpcmongo.repository.UserRepository
 import io.grpc.Status
 import net.devh.boot.grpc.server.service.GrpcService
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.Duration
+import reactor.core.publisher.Mono
 import com.example.grpcmongo.model.User as UserModel
 
 @GrpcService
-class UserCRUDService : UserCRUDServiceGrpcKt.UserCRUDServiceCoroutineImplBase() {
+class UserCRUDService : ReactorUserCRUDServiceGrpc.UserCRUDServiceImplBase() {
 
     @Autowired
     lateinit var repository: UserRepository
+    override fun createUser(request: Mono<User>?): Mono<ResponseMessage> =
+        request!!.flatMap {
+            repository.insert(UserModel.fromProtoMessage(it))
+                .thenReturn(
+                    ResponseMessage.newBuilder()
+                        .setMessage("user ${it.username} was created")
+                        .build()
+                )
+        }
 
-    override suspend fun createUser(request: User): ResponseMessage {
-        repository.insert(UserModel.fromProtoMessage(request))
-            .block(Duration.ofSeconds(5))
+    override fun readUser(request: Mono<Username>?): Mono<User> =
+        request!!.flatMap { user ->
+            findUserByUsernameElseError(user.username)
+        }.map {
+            User.newBuilder()
+                .setUsername(it.username)
+                .setFirstName(it.firstName)
+                .setLastName(it.lastName)
+                .setAge(it.age)
+                .build()
+        }
 
-        return ResponseMessage.newBuilder()
-            .setMessage("user ${request.username} was created")
-            .build()
-    }
+    override fun updateUser(request: Mono<User>?): Mono<ResponseMessage> =
+        request!!.flatMap { user ->
+            findUserByUsernameElseError(user.username)
+                .flatMap {
+                    repository.save(UserModel.fromProtoMessage(user, it.id))
+                }.thenReturn(
+                    ResponseMessage.newBuilder()
+                        .setMessage("user ${user.username} was updated")
+                        .build()
+                )
+        }
 
-    override suspend fun readUser(request: Username): User {
-        val userModel = repository.findByUsername(request.username)
-            .block(Duration.ofSeconds(5))
-            ?: throw Status.NOT_FOUND
-                .withDescription("user '${request.username}' is not found")
-                .asRuntimeException()
+    override fun deleteUser(request: Mono<Username>?): Mono<ResponseMessage> =
+        request!!.flatMap { user ->
+            repository.deleteByUsername(user.username)
+                .thenReturn(
+                    ResponseMessage.newBuilder()
+                        .setMessage("user '${user.username}' was deleted")
+                        .build()
+                )
+        }
 
-        return User.newBuilder()
-            .setUsername(userModel.username)
-            .setFirstName(userModel.firstName)
-            .setLastName(userModel.lastName)
-            .setAge(userModel.age)
-            .build()
-    }
-
-    override suspend fun updateUser(request: User): ResponseMessage {
-        val user = repository.findByUsername(request.username)
-            .block(Duration.ofSeconds(5))
-            ?: throw Status.NOT_FOUND
-                .withDescription("user '${request.username}' is not found")
-                .asRuntimeException()
-        repository.save(
-            UserModel.fromProtoMessage(request, user.id)
-        ).subscribe()
-        return ResponseMessage.newBuilder().setMessage("update user was called").build()
-    }
-
-    override suspend fun deleteUser(request: Username): ResponseMessage {
-        repository.deleteByUsername(request.username)
-            .block(Duration.ofSeconds(5))
-        return ResponseMessage.newBuilder()
-            .setMessage("user '${request.username}' was deleted")
-            .build()
+    private fun findUserByUsernameElseError(username: String): Mono<UserModel> {
+        return repository.findByUsername(username)
+            .switchIfEmpty(
+                Mono.error(
+                    Status.NOT_FOUND
+                        .withDescription("cannot find user '${username}'")
+                        .asRuntimeException()
+                )
+            )
     }
 }

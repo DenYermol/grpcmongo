@@ -6,6 +6,7 @@ val protobufPluginVersion by extra("0.8.18")
 val grpcVersion by extra("1.47.0")
 
 plugins {
+    id("idea")
     id("org.springframework.boot") version "2.7.0"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.google.protobuf") version "0.8.18"
@@ -22,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.7.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -30,6 +31,7 @@ dependencies {
     implementation("io.grpc:grpc-kotlin-stub:1.3.0")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("com.google.protobuf:protobuf-kotlin:$protobufVersion")
+    implementation("com.salesforce.servicelibs:reactor-grpc-stub:1.2.3")
 }
 
 tasks.withType<KotlinCompile> {
@@ -51,23 +53,30 @@ protobuf {
         id("grpc") {
             artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
-        id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.3.0:jdk8@jar"
+
+        id("reactor") {
+            artifact = "com.salesforce.servicelibs:reactor-grpc:1.2.3"
         }
-        // id("reactor") {
-        //     artifact = "com.salesforce.servicelibs:reactor-grpc:1.2.3"
-        // }
     }
     generateProtoTasks {
         all().forEach {
             it.plugins {
                 id("grpc")
-                id("grpckt")
-                //id("reactor")
-            }
-            it.builtins {
-                id("kotlin")
+                id("reactor")
             }
         }
+    }
+    generatedFilesBaseDir = "$projectDir/src/generated"
+}
+
+idea {
+    module {
+        sourceDirs.add(file("$projectDir/src/generated/main/java"))
+        sourceDirs.add(file("$projectDir/src/generated/main/grpc"))
+    }
+}
+tasks {
+    clean {
+        delete("$projectDir/src/generated")
     }
 }
