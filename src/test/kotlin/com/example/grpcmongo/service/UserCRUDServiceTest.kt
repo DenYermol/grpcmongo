@@ -143,7 +143,7 @@ internal class UserCRUDServiceTest {
     }
 
     @Test
-    fun `should return response message when deleteUser is called`() {
+    fun `should throw error when updateUser is called`() {
         //GIVEN
         val userMessage = UserMessage.newBuilder()
             .setUsername("Den")
@@ -167,7 +167,7 @@ internal class UserCRUDServiceTest {
     }
 
     @Test
-    fun `should throw error when deleteUser is called`() {
+    fun `should return response message when deleteUser is called`() {
         //GIVEN
         val username = "Den"
         val request = Mono.just(
