@@ -26,12 +26,15 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.7.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("net.devh:grpc-server-spring-boot-starter:2.13.1.RELEASE")
     implementation("io.grpc:grpc-kotlin-stub:1.3.0")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("com.google.protobuf:protobuf-kotlin:$protobufVersion")
     implementation("com.salesforce.servicelibs:reactor-grpc-stub:1.2.3")
+    implementation("org.mockito:mockito-core:4.6.1")
+    testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
 }
 
 tasks.withType<KotlinCompile> {
